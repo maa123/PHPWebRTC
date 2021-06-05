@@ -1,12 +1,12 @@
 'use strict';
 
-class Logger{
-    constructor(element){
+class Logger {
+    constructor(element) {
         this.container = element;
         this.elem = window.document.createElement('ul');
         this.container.appendChild(this.elem);
     }
-    log(text){
+    log(text) {
         const _li = window.document.createElement('li');
         _li.textContent = text;
         this.elem.appendChild(_li);
@@ -15,12 +15,12 @@ class Logger{
 }
 
 class ChatView {
-    constructor(element){
+    constructor(element) {
         this.container = element;
         this.elem = window.document.createElement('ul');
         this.container.appendChild(this.elem);
     }
-    add(text){
+    add(text) {
         const _li = window.document.createElement('li');
         _li.textContent = text;
         this.elem.appendChild(_li);
@@ -31,11 +31,11 @@ const Log = new Logger(document.getElementById('log-container'));
 const chat = new ChatView(document.getElementById('chat'));
 Log.log("Start.");
 const signaling_url = "./signaling.php";
-const stun_config = {"iceServers":[{"urls": "stun:stun.l.google.com:19302"}, {"urls": "stun:stun1.l.google.com:19302"}]};
+const stun_config = { "iceServers": [{ "urls": "stun:stun.l.google.com:19302" }, { "urls": "stun:stun1.l.google.com:19302" }] };
 
 const sleep = s => new Promise(a => setTimeout(a, s));
 
-class SignalingPHP{
+class SignalingPHP {
     constructor(id, url, conn) {
         this.url = url;
         this.conn = conn;
@@ -46,14 +46,14 @@ class SignalingPHP{
             const body = new FormData();
             body.append('mode', 'joinRoom');
             body.append('roomId', this.roomId);
-            fetch(this.url, {method: 'POST', body}).then(res => res.json()).then(res => {
-                if(res.result){
-                    if(res.role === "offer"){
+            fetch(this.url, { method: 'POST', body }).then(res => res.json()).then(res => {
+                if (res.result) {
+                    if (res.role === "offer") {
                         resolve(false);
-                    }else{
+                    } else {
                         resolve(JSON.parse(res.sdp));
                     }
-                }else{
+                } else {
                     Log.log(res.message);
                     reject(res.message);
                 }
@@ -66,10 +66,10 @@ class SignalingPHP{
             body.append('mode', 'offer');
             body.append('roomId', this.roomId);
             body.append('sdp', JSON.stringify(sdp));
-            fetch(this.url, {method: 'POST', body}).then(res => res.json()).then(res => {
-                if(res.result){
+            fetch(this.url, { method: 'POST', body }).then(res => res.json()).then(res => {
+                if (res.result) {
                     resolve();
-                }else{
+                } else {
                     reject(res.message)
                 }
             });
@@ -81,10 +81,10 @@ class SignalingPHP{
             body.append('mode', 'answer');
             body.append('roomId', this.roomId);
             body.append('sdp', JSON.stringify(sdp));
-            fetch(this.url, {method: 'POST', body}).then(res => res.json()).then(res => {
-                if(res.result){
+            fetch(this.url, { method: 'POST', body }).then(res => res.json()).then(res => {
+                if (res.result) {
                     resolve();
-                }else{
+                } else {
                     reject(res.message)
                 }
             });
@@ -95,14 +95,14 @@ class SignalingPHP{
             const body = new FormData();
             body.append('mode', 'getAnswer');
             body.append('roomId', this.roomId);
-            (async ()=>{
-                while(true){
+            (async () => {
+                while (true) {
                     await sleep(450);
-                    const res = await (await fetch(this.url, {method: 'POST', body})).json();
-                    if(res.result && res.status === "found"){
+                    const res = await (await fetch(this.url, { method: 'POST', body })).json();
+                    if (res.result && res.status === "found") {
                         resolve(JSON.parse(res.sdp));
                         break;
-                    }else{
+                    } else {
                         console.log("waiting...")
                     }
                 }
@@ -114,7 +114,7 @@ class SignalingPHP{
 const createOffer = conn => new Promise((resolve, reject) => {
     let dataChannel;
     conn.onicecandidate = e => {
-        if(e.candidate === null){
+        if (e.candidate === null) {
             resolve(dataChannel);
         }
     }
@@ -128,7 +128,7 @@ const createOffer = conn => new Promise((resolve, reject) => {
 
 const waitAllIcecandidate = conn => new Promise((resolve, reject) => {
     conn.onicecandidate = e => {
-        if(e.candidate === null){
+        if (e.candidate === null) {
             resolve();
         }
     }
@@ -137,21 +137,21 @@ const waitAllIcecandidate = conn => new Promise((resolve, reject) => {
 var _conn;
 let dataChannel;
 
-const startConnection = async roomId =>{
+const startConnection = async roomId => {
     const conn = new RTCPeerConnection(stun_config);
     _conn = conn;
     conn.onconnectionstatechange = e => {
-        if(conn.connectionState === 'connected'){
+        if (conn.connectionState === 'connected') {
             Log.log("接続完了");
             document.getElementById('connection-main').classList.remove('hide');
-        }else if(conn.connectionState === 'failed'){
+        } else if (conn.connectionState === 'failed') {
             Log.log('接続失敗');
         }
     }
     const sigP = new SignalingPHP(roomId, signaling_url, conn);
     const sdp = await sigP.checkICE();
-    
-    if(sdp){
+
+    if (sdp) {
         //CreateAnswer
         conn.ondatachannel = e => {
             dataChannel = e.channel;
@@ -166,7 +166,7 @@ const startConnection = async roomId =>{
         await waitAllIcecandidate(conn);
         await sigP.answer(conn.localDescription);
         Log.log('接続試行開始');
-    }else{
+    } else {
         //CreateOffer
         dataChannel = await createOffer(conn);
         await sigP.offer(conn.localDescription);
@@ -181,8 +181,8 @@ const startConnection = async roomId =>{
     }
     document.getElementById('send').addEventListener('click', e => {
         const msg = document.getElementById('msg').value;
-        if(msg !== "") {
-            if(dataChannel){
+        if (msg !== "") {
+            if (dataChannel) {
                 dataChannel.send(msg);
                 chat.add(msg);
                 document.getElementById('msg').value = "";
