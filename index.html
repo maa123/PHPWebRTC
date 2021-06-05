@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC - PHP</title>
+    <style>
+        .hide{
+            display: none;
+        }
+        #log-container{
+            overflow-y: scroll;
+            height: 6em;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebRTCのシグナリングをPHPで行うアプリケーション</h1>
+    <p id="connection-info"></p>
+    <div id="connection-form">
+        <label>roomId<input id="room-id" type="text" value="test"></label>
+        <button id="connect">接続</button>
+    </div>
+    <div id="log-container">
+    </div>
+    <div id="connection-main" class="hide">    
+        <div id="chat"></div>
+        <label><input type="text" id="msg"></label>
+        <button type="button" id="send">送信</button>
+    </div>
+<script src="./rtc.js"></script>
+</body>
+</html>
